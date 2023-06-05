@@ -42,6 +42,7 @@ class Doctor(BaseModel):
     first_name: str
     last_name: str
     specialty: str
+    disponibility: bool 
     updated_at: Optional[datetime]
     created_at: datetime = datetime.now()
    
