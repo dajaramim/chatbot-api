@@ -30,10 +30,10 @@ async def get_all_campanias(db: AsyncIOMotorClient = Depends(get_db(resource="re
     
 # Obtener una campaña según un id
 @router.get("/campaigns/{id}")
-async def get_campania(id: str, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="GET"))) -> Campaign:
+async def get_campania(rut: str, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="GET"))) -> Campaign:
     
     logging.info(f"get example with name: {id}")
-    data = await db["campaign"].find_one({"_id": ObjectId(id)})
+    data = await db["campaign"].find_one({"rut": rut})
 
     if data:
         # Si el dato existe, retornarlo

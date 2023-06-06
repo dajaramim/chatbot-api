@@ -7,64 +7,27 @@ from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from app.auth import get_db
-from app.models.model import Patient
-from app.models.model import Doctor
-from app.models.model import Centre
 from app.models.model import Appointment
 
 router = APIRouter(
     tags=["agendamiento"],
     responses={404: {"description": "Not found"}},
 )
-##                  POBLAR DATOS
+##                   OBTENER LOS DATOS
+#                    Obtener TODOS LOS DOCTORES
+@router.get("/appoinment")
+async def get_all_doctors(db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="GET"))) -> List[Appointment]:
+    logging.info("Inside get_all_doctors function")
+    try:
+        # obtengo todos los elementos de campaign enlistados en un máximo de 100 elementos
+        result = await db["appointment"].find().to_list(length=100)
+        logging.info(f"Result: {result}")
+        return [Appointment(**appointment) for appointment in result]
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-#Ingresar Doctor
-@router.post("/doctor")
-async def create_doctor(data: Doctor, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="POST"))):
-    
-    # Convertir el modelo a un diccionario
-    data_dict = data.dict()
-    # Elimino el id que genera pydantic
-    data_dict.pop("id")
-    
-    logging.info(f"post example with: {data_dict}")
-    
-    new_data = await db["doctor"].insert_one(data_dict)
-
-    # Retornar el id del nuevo dato
-    return f"{new_data.inserted_id}"
-
-#Ingresar Paciente
-@router.post("/patient")
-async def create_patient(data: Patient, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="POST"))):
-    
-    # Convertir el modelo a un diccionario
-    data_dict = data.dict()
-    # Elimino el id que genera pydantic
-    data_dict.pop("id")
-    
-    logging.info(f"post example with: {data_dict}")
-    
-    new_data = await db["patient"].insert_one(data_dict)
-
-    # Retornar el id del nuevo dato
-    return f"{new_data.inserted_id}"
-
-#Ingresar centro médico
-@router.post("/centre")
-async def create_centre(data: Centre, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="POST"))):
-    
-    # Convertir el modelo a un diccionario
-    data_dict = data.dict()
-    # Elimino el id que genera pydantic
-    data_dict.pop("id")
-    
-    logging.info(f"post example with: {data_dict}")
-    
-    new_data = await db["centre"].insert_one(data_dict)
-
-    # Retornar el id del nuevo dato
-    return f"{new_data.inserted_id}"
+##                    POBLAR DATOS
 
 #Crear una cita
 @router.post("/appoinment")
@@ -83,24 +46,36 @@ async def create_appoinment(data: Appointment, db: AsyncIOMotorClient = Depends(
     return f"{new_data.inserted_id}"
 
 
-
-
 # ENDPOINTS QUE NOS PIDE ALLOXENTRIC
 #Obtener todas las campañas
-""" @router.get("/disponibilidad/{doctor_id}")
 
-# Obtener una campaña según un id
+""" 
+Daniel
+@router.get("/disponibilidad/{doctor_id}")
+@router.get("/sugerencia")
+@router.get("/lista_de_espera") 
+
+Nico
 @router.post("/agendar")
-
-#Crear una campaña
 @router.put("/reagendar")
 
-#Editar una campaña
+Ricardo
 @router.put("/confirmacion")
-
-#Eliminar una campaña
 @router.put("/cancelar")
 
-@router.put("/sugerencia")
+"""
 
-@router.get("/lista_de_espera") """
+# confirmar una cita
+# 1- get paciente
+# 2- get appointment según id paciente
+# 3- get doctor(muestra nombre y especialidad)
+# 4- get centro médico con el id del doctor
+# 5- put appointment (fecha)
+# 
+# 
+# 
+# 
+# 
+# 
+# ##
+# #
