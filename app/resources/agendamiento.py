@@ -119,7 +119,7 @@ async def create_appoinment(data: Appointment, db: AsyncIOMotorClient = Depends(
     data_dict = data.dict()
     # Elimino el id que genera pydantic
     data_dict.pop("id")
-    
+
     logging.info(f"post example with: {data_dict}")
     
     new_data = await db["appointment"].insert_one(data_dict)
@@ -130,6 +130,23 @@ async def create_appoinment(data: Appointment, db: AsyncIOMotorClient = Depends(
 
 # ENDPOINTS QUE NOS PIDE ALLOXENTRIC
 #Obtener todas las campañas
+
+
+@router.put("/confirmacion/{appointment_id}")
+async def update_campaign(appointment_id:str, data: Appointment, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="PUT"))):
+
+#Convertir el modelo a un diccionario
+    data_dict = data.dict(exclude_unset=True)
+    data_dict.pop('id', None)
+    logging.info(f"put example with data: {data_dict}")
+    logging.info(f"put example with id: {id} and data: {data_dict}")
+
+    # Actualizar el dato
+    data_dict["state"] = "confirmado"
+    await db["appointment"].find_one_and_update({"_id": ObjectId(appointment_id)}, {"$set": data_dict})
+
+    # Retornar un mensaje de éxito
+    return data_dict
 
 """ 
 Daniel
@@ -151,10 +168,8 @@ Ricardo
 
 # confirmar una cita
 #  
-# 1- get appointment según id paciente
-# 2- get doctor(muestra nombre y especialidad)
-# 3- get centro médico con el id del doctor
-# 4- put appointment (fecha y estado)
+# 1- get appointment según id paciente, doctor(muestra nombre y especialidad, centro médico
+# 2- put appointment (fecha y estado)
 
 # Confirmar multiples Citas
 # 1- get appointment según id paciente
@@ -163,7 +178,7 @@ Ricardo
 
 # Cancelación espontánea
 # 1- get appointment según id paciente
-# 
+# 2- put cancelar
 #
 #   
 

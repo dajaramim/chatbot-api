@@ -63,9 +63,6 @@ class Centre (BaseModel):
 
 class Appointment (BaseModel):
     id: Optional[PyObjectId] = Field(alias='_id')
-    patient: Patient
-    doctor: Doctor
-    centre: Centre
     state: str # si se agendó, canceló, reagendó, ya se hizo la cita
     updated_date: Optional[datetime]
     created_date: datetime = datetime.now()
