@@ -20,7 +20,7 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 class Patient(BaseModel):
-    id: Optional[PyObjectId] = Field(alias='_id')
+    id: Optional[str] = Field(alias='_id')
     first_name: str
     last_name: str
     rut: str
@@ -36,7 +36,7 @@ class Patient(BaseModel):
         }
 
 class Doctor(BaseModel):
-    id: Optional[PyObjectId] = Field(alias='_id')
+    id: Optional[str] = Field(alias='_id')
     first_name: str
     last_name: str
     specialty: str
@@ -50,7 +50,7 @@ class Doctor(BaseModel):
         }
 
 class Centre (BaseModel):
-    id: Optional[PyObjectId] = Field(alias='_id')
+    id: Optional[str] = Field(alias='_id')
     name: str
     address: str
    
@@ -66,6 +66,9 @@ class Appointment (BaseModel):
     state: str # si se agendó, canceló, reagendó, ya se hizo la cita
     updated_date: Optional[datetime]
     created_date: datetime = datetime.now()
+    doctor: Doctor
+    patient: Patient
+    centre: Centre
    
     class Config:
         allow_population_by_field_name = True
