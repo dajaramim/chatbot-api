@@ -35,12 +35,12 @@ class Patient(BaseModel):
             ObjectId: str
         }
 
-class Doctor(BaseModel):
+
+
+class Centre (BaseModel):
     id: Optional[str] = Field(alias='_id')
-    first_name: str
-    last_name: str
-    specialty: str
-    disponibility: List[datetime]
+    name: str
+    address: str
    
     class Config:
         allow_population_by_field_name = True
@@ -48,11 +48,14 @@ class Doctor(BaseModel):
         json_encoders = {
             ObjectId: str
         }
-
-class Centre (BaseModel):
+class Doctor(BaseModel):
     id: Optional[str] = Field(alias='_id')
-    name: str
-    address: str
+    first_name: str
+    last_name: str
+    rut: str
+    specialty: str
+    centre_id: str 
+    disponibility: List[datetime]
    
     class Config:
         allow_population_by_field_name = True

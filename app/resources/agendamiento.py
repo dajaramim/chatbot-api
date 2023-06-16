@@ -36,7 +36,7 @@ async def get_sugerencia(db: AsyncIOMotorClient = Depends(get_db(resource="resou
 
 #Ingresar Doctor
 @router.post("/doctor")
-async def create_doctor(data: Doctor, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="POST"))):
+async def create_doctor(centre_id:str,data: Doctor, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="POST"))):
     
     # Convertir el modelo a un diccionario
     data_dict = data.dict()
@@ -44,6 +44,7 @@ async def create_doctor(data: Doctor, db: AsyncIOMotorClient = Depends(get_db(re
     data_dict.pop("id")
     
     logging.info(f"post example with: {data_dict}")
+    data_dict["centre_id"] = centre_id
     
     new_data = await db["doctor"].insert_one(data_dict)
 
@@ -106,7 +107,7 @@ async def create_appoinment(data: Appointment, db: AsyncIOMotorClient = Depends(
 
 
 @router.post("/agendar/{date}")
-async def agendar(date:str,doctor_id:str,id_patient:str, data:Appointment ,db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="POST"))):
+async def agendar(date:str,rut_doctor:str,rut_patient:str, data:Appointment ,db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="POST"))):
     data_dict_appointment = data.dict()
     data_dict_appointment.pop("id")
 
@@ -120,9 +121,16 @@ async def agendar(date:str,doctor_id:str,id_patient:str, data:Appointment ,db: A
     #se crea la variable data_dict_patient para utilizarla en el ingreso de variables al objeto appointment
     data_dict_patient = data_dict_appointment["patient"]
 
+     #ingresa el diccionario centre al objeto patient dentro de la clase appointment
+    data_dict_appointment["centre"] = data.centre.dict()
+    #se crea la variable data_dict_cenre para utilizarla en el ingreso de variables al objeto appointment
+    data_dict_centre = data_dict_appointment["centre"]
 
-    doctor_user = await db["doctor"].find_one({"_id":ObjectId(doctor_id)})
-    patient_user = await db["patient"].find_one({"_id":ObjectId(id_patient)})
+
+    doctor_user = await db["doctor"].find_one({"rut":rut_doctor})
+    centreId = doctor_user["centre_id"]
+    patient_user = await db["patient"].find_one({"rut":rut_patient})
+    centre_user = await db["centre"].find_one({"_id": ObjectId(centreId)})
     data_dict_appointment["date"] = date
     data_dict_appointment["state"] = "agendado"
 
@@ -131,8 +139,13 @@ async def agendar(date:str,doctor_id:str,id_patient:str, data:Appointment ,db: A
     data_dict_doctor["id"] = doctor_user["_id"]
     data_dict_doctor["first_name"] = doctor_user["first_name"]
     data_dict_doctor["last_name"] = doctor_user["last_name"]
+    data_dict_doctor["rut"] = doctor_user["rut"]
     data_dict_doctor["specialty"] = doctor_user["specialty"]
+    data_dict_doctor["centre_id"] = doctor_user["centre_id"]
     data_dict_doctor["disponibility"] = doctor_user["disponibility"]
+    
+
+
 
     #Se ingresan los datos de patient_user a data_dict_patient
 
@@ -143,6 +156,12 @@ async def agendar(date:str,doctor_id:str,id_patient:str, data:Appointment ,db: A
     data_dict_patient["email"] = patient_user["email"]
     data_dict_patient["address"] = patient_user["address"]
     data_dict_patient["phone"] = patient_user["phone"]
+
+    #Se ingresan los datos de patient_user a data_dict_centre
+
+    data_dict_centre["id"] = centre_user["_id"]
+    data_dict_centre["name"] = centre_user["name"]
+    data_dict_centre["address"] = centre_user["address"]
     
 
     await db["appointment"].insert_one(data_dict_appointment)
@@ -214,57 +233,76 @@ async def get_disponibilidad_specialty(specialty_name:str, db: AsyncIOMotorClien
                             content={"message": "Data not found"})
 
 #Cambia el estado de una cita a confirmado 
-@router.put("/confirmacion/{appointment_id}")
-async def confirm_appointment(appointment_id:str, data: Appointment, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="PUT"))):
+@router.put("/confirmacion/{dateAppointment}")
+async def cancelar(dateAppointment:str,rut:str,db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="PUT"))):
+    
+    #se añaden los parametros en el diccionario busqueda para que la funcion find_one los busque
+    busqueda = {
+        "date" : dateAppointment,
+        "patient.rut": rut
+    }
+    data_appointment = await db["appointment"].find_one(busqueda)
+    data_id = data_appointment["_id"]
+   
+    if data_appointment:
+        
+        data_appointment["state"] ="confirmado"
+        new_data = await db["appointment"].find_one_and_update({"_id": ObjectId(data_id)}, {"$set": data_appointment})
+        if new_data :
 
-    #Convertir el modelo a un diccionario
-    data_dict = data.dict(exclude_unset=True)
-     # Elimino el id que genera pydantic
-    data_dict.pop('id', None)
-    logging.info(f"put example with data: {data_dict}")
-    logging.info(f"put example with id: {id} and data: {data_dict}")
-
-    # Actualizar el dato
-    data_dict["state"] = "confirmado"
-    await db["appointment"].find_one_and_update({"_id": ObjectId(appointment_id)}, {"$set": data_dict})
-
-    # Retornar un mensaje de éxito
-    return data_dict
-
+            return "Confirmado"
+        else:
+            return "error"
+    else:
+        return "no existe"
 
 #Cambia el estado de una cita a cancelado 
-@router.put("/cancelar/{appointment_id}")
-async def cancel_appointment(appointment_id:str, data: Appointment, db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="PUT"))):
-
-    #Convertir el modelo a un diccionario
-    data_dict = data.dict(exclude_unset=True)
-    # Elimino el id que genera pydantic
-    data_dict.pop('id', None)
-    logging.info(f"put example with data: {data_dict}")
-    logging.info(f"put example with id: {id} and data: {data_dict}")
-
-    # Actualizar el dato
-    data_dict["state"] = "cancelado"
-    await db["appointment"].find_one_and_update({"_id": ObjectId(appointment_id)}, {"$set": data_dict})
-
-    # Retornar un mensaje de éxito
-    return data_dict
-
-@router.put("/reagendar/{appointment_id}")
-async def reschedule(date:str,appointment_id:str,data: Appointment,db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="PUT"))):
+@router.put("/cancelar/{dateAppointment}")
+async def cancelar(dateAppointment:str,rut:str,db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="PUT"))):
     
-    #Convertir el modelo a un diccionario
-    data_dict_appointment = data.dict(exclude_unset=True)
-    # Elimino el id que genera pydantic
-    data_dict_appointment.pop('id', None)
+    #se añaden los parametros en el diccionario busqueda para que la funcion find_one los busque
+    busqueda = {
+        "date" : dateAppointment,
+        "patient.rut": rut
+    }
+    data_appointment = await db["appointment"].find_one(busqueda)
+    data_id = data_appointment["_id"]
+   
+    if data_appointment:
+        
+        data_appointment["state"] ="cancelado"
+        new_data = await db["appointment"].find_one_and_update({"_id": ObjectId(data_id)}, {"$set": data_appointment})
+        if new_data :
+
+            return "Cancelado"
+        else:
+            return "error"
+    else:
+        return "no existe"
+
+@router.put("/reagendar/{dateAppointment}")
+async def reschedule(newDate:str,dateAppointment:str,rut:str,db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="PUT"))):
     
-    data_dict_appointment["date"] = date
-    data_dict_appointment["state"] = "reagendado"
+    #se añaden los parametros en el diccionario busqueda para que la funcion find_one los busque
+    busqueda = {
+        "date" : dateAppointment,
+        "patient.rut": rut
+    }
+    data_appointment = await db["appointment"].find_one(busqueda)
+    data_id = data_appointment["_id"]
+   
+    if data_appointment:
+        
+        data_appointment["state"] ="reagendado"
+        data_appointment["date"] = newDate
+        new_data = await db["appointment"].find_one_and_update({"_id": ObjectId(data_id)}, {"$set": data_appointment})
+        if new_data :
 
-    await db["appointment"].find_one_and_update({"_id": ObjectId(appointment_id)}, {"$set": data_dict_appointment})
-
-    return data_dict_appointment
-
+            return "reagendado"
+        else:
+            return "error"
+    else:
+        return "no existe"
 
 
     
