@@ -35,12 +35,7 @@ class Patient(BaseModel):
             ObjectId: str
         }
 
-class Doctor(BaseModel):
-    id: Optional[str] = Field(alias='_id')
-    first_name: str
-    last_name: str
-    specialty: str
-    disponibility: List[datetime]
+
    
     class Config:
         allow_population_by_field_name = True
@@ -49,10 +44,21 @@ class Doctor(BaseModel):
             ObjectId: str
         }
 
+class Doctor(BaseModel):
+    id: Optional[str] = Field(alias='_id')
+    first_name: str
+    last_name: str
+    rut: str
+    specialty: str
+    centre_id: str 
+    disponibility: List[datetime]
+
+
 class Centre (BaseModel):
     id: Optional[str] = Field(alias='_id')
     name: str
     address: str
+
    
     class Config:
         allow_population_by_field_name = True
@@ -66,6 +72,7 @@ class Appointment (BaseModel):
     state: str # si se agendó, canceló, reagendó, ya se hizo la cita
     updated_date: Optional[datetime]
     created_date: datetime = datetime.now()
+    date: datetime
     doctor: Doctor
     patient: Patient
     centre: Centre
@@ -76,7 +83,4 @@ class Appointment (BaseModel):
         json_encoders = {
             ObjectId: str
         }
-
-
-
 
