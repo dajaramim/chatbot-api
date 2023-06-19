@@ -36,11 +36,6 @@ class Patient(BaseModel):
         }
 
 
-
-class Centre (BaseModel):
-    id: Optional[str] = Field(alias='_id')
-    name: str
-    address: str
    
     class Config:
         allow_population_by_field_name = True
@@ -48,6 +43,7 @@ class Centre (BaseModel):
         json_encoders = {
             ObjectId: str
         }
+
 class Doctor(BaseModel):
     id: Optional[str] = Field(alias='_id')
     first_name: str
@@ -56,6 +52,13 @@ class Doctor(BaseModel):
     specialty: str
     centre_id: str 
     disponibility: List[datetime]
+
+
+class Centre (BaseModel):
+    id: Optional[str] = Field(alias='_id')
+    name: str
+    address: str
+
    
     class Config:
         allow_population_by_field_name = True

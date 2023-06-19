@@ -16,21 +16,6 @@ router = APIRouter(
     tags=["agendamiento"],
     responses={404: {"description": "Not found"}},
 )
-##                   OBTENER LOS DATOS
-#                    Obtener TODOS LOS DOCTORES
-
-    
-    
-# Obtener una lista de las citas según el ID del paciente
-
-
-###         SUGERENCIA
-""" @router.get("/sugerencia")
-async def get_sugerencia(db: AsyncIOMotorClient = Depends(get_db(resource="resource1", method="GET"))):
-    
- """
-
-
 
 ##                    POBLAR DATOS
 
@@ -303,5 +288,6 @@ async def reschedule(newDate:str,dateAppointment:str,rut:str,db: AsyncIOMotorCli
             return "error"
     else:
         return "no existe"
+
 
 
